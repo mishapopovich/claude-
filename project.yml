@@ -1,0 +1,34 @@
+# Fallback project definition for XcodeGen (brew install xcodegen; xcodegen generate).
+# Only needed if Trainer.xcodeproj ever fails to open or you want to regenerate it.
+name: Trainer
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  Trainer:
+    type: application
+    platform: iOS
+    sources:
+      - Trainer
+    entitlements:
+      path: Trainer.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.trainer
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_CFBundleDisplayName: Trainer
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Trainer reads steps, active energy, sleep, heart rate, body weight, workouts and the calories and macros your food app saves, to show them on the Today screen and give your coach context. Nothing is uploaded except summary numbers in coach chats you send with your own API key."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Trainer saves your finished workouts and the body weights you log to Apple Health."

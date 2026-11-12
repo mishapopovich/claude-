@@ -198,6 +198,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "MP Coaching";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "MP Coaching reads steps, active energy, sleep, heart rate, body weight, workouts and the calories and macros your food app saves, to show them on the Today screen and give your coach context. Nothing is uploaded except summary numbers in coach chats you send with your own API key.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MP Coaching saves your finished workouts and the body weights you log to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -233,6 +235,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "MP Coaching";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "MP Coaching reads steps, active energy, sleep, heart rate, body weight, workouts and the calories and macros your food app saves, to show them on the Today screen and give your coach context. Nothing is uploaded except summary numbers in coach chats you send with your own API key.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MP Coaching saves your finished workouts and the body weights you log to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

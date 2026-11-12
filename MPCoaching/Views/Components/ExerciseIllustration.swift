@@ -262,7 +262,7 @@ extension MovementPattern {
                 end: Pose(torso: 345, thighA: 90, shinA: 180, upperArmA: 198, forearmA: 12),
                 props: [.seat, .cableFromAbove])
         case .pullUp:
-            let bar = CGPoint(x: 54, y: 12)
+            let bar = CGPoint(x: 54, y: 20)
             return .init(
                 start: Pose(torso: 0, thighA: 175, shinA: 200, upperArmA: 4, forearmA: 2, foot: 150, anchor: .hand(bar)),
                 end: Pose(torso: 350, thighA: 170, shinA: 205, upperArmA: 200, forearmA: 14, foot: 150, anchor: .hand(bar)),
@@ -303,7 +303,7 @@ extension MovementPattern {
                 end: Pose(torso: 80, thighA: 259, shinA: 259, upperArmA: 180, forearmA: 90, foot: 180),
                 props: [], period: 3)
         case .hangingKneeRaise:
-            let bar = CGPoint(x: 54, y: 12)
+            let bar = CGPoint(x: 54, y: 20)
             return .init(
                 start: Pose(torso: 0, thighA: 180, shinA: 185, upperArmA: 2, forearmA: 0, foot: 150, anchor: .hand(bar)),
                 end: Pose(torso: 350, thighA: 70, shinA: 175, upperArmA: 2, forearmA: 0, foot: 150, anchor: .hand(bar)),

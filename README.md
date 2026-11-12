@@ -1,82 +1,54 @@
-# Trainer (working name)
+# MP Coaching
 
-An iPhone-only personal trainer app: guided workouts with fast set logging, per-exercise stats,
-bodyweight and big-three PRs, Apple Health read/write, check-ins on your own schedule, and an AI
-coach powered by your own Anthropic API key.
+A science-based strength and nutrition coach for iPhone. It reads all your metrics (training,
+sleep, resting heart rate, food, body weight, your shift schedule), holds you back when you're
+over-fatigued, pushes you when you're recovered, and lets you compete with friends on
+leaderboards.
 
-This is the **MVP** from the build brief. Friends, groups and leaderboards (v2) are not built yet:
-they wait on the backend decision (see open questions below).
+**→ To install it on your iPhone, see [docs/INSTALL_ON_IPHONE.md](docs/INSTALL_ON_IPHONE.md).**
 
-## Run it
+Every push is compiled on a real Mac by GitHub Actions (`iOS build` workflow), so the code in this
+branch is known to build. The `TestFlight` workflow signs it and uploads it to App Store Connect.
 
-1. Open `Trainer.xcodeproj` in **Xcode 16 or newer** (the project uses folder-synced groups, so
-   any file you add under `Trainer/` is picked up automatically).
-2. Select the **Trainer** target → *Signing & Capabilities* → pick your Team. Change the bundle id
-   (`com.example.trainer`) to something you own, e.g. `com.yourname.trainer`.
-3. Run on an iPhone (HealthKit has limited data in the Simulator). iOS 17+.
+## Features
 
-If the project ever refuses to open, `brew install xcodegen && xcodegen generate` rebuilds it from
-`project.yml`.
+| Area | What it does | Code |
+| --- | --- | --- |
+| **Coach engine** | Readiness score 0–100 from sleep, resting HR vs your 30-day baseline, shifts, how you said you feel, training-load spikes (7-day vs 4-week), and lifts dropping. Low readiness trims a set per exercise (one tap restores the full plan); high readiness says go for PRs. Suggests a deload after 6 hard weeks or when lifts drop | `Services/CoachEngine.swift`, `Views/Today/CoachInsightsView.swift` |
+| **Weekly volume** | Hard sets per muscle group in the last 7 days against rough maintenance/productive/high ranges | same |
+| **Nutrition** | Protein target (1.6–2.2 g/kg), maintenance calories measured from FatSecret/Health intake + weight trend, daily target for your goal (build muscle / lose fat / recomp / maintain), and "you're gaining too fast" style advice | same |
+| **Guided workouts** | One tap per set (pre-filled from last time), auto rest timer, supersets alternate, edit/skip/extra sets, summary with PRs, saved to Apple Health | `Views/Train` |
+| **Exercise pictures** | Machine-placard style: solid figure doing the movement, working muscles lit in blue, dashed motion arrow, plus a front/back muscle chart | `Views/Components/ExerciseIllustration.swift` |
+| **Stats and PRs** | Per-exercise Epley 1RM and volume charts; bodyweight with 7-day average; bench/squat/deadlift tested vs estimated maxes and total | `Views/Library`, `Views/Progress` |
+| **Leaderboards** | CloudKit friends (by @username) and groups (6-character invite code). Rankings: total, bench, squat, deadlift, training streak. "You're 15 lbs behind Alex" nudges on Today. Only lifts and session counts are shared, never body weight | `Services/SocialStore.swift`, `Views/Social` |
+| **Share cards** | Branded 1080×1080 PR / total images for Instagram or Messages | `Views/Social/PRCard.swift` |
+| **AI coach chat** | Your own Anthropic API key (Keychain), streaming, default Claude Sonnet 5.5. Sees the same readiness, volume, nutrition and leaderboard data as the app | `Views/Chat`, `Services/AnthropicClient.swift`, `Services/TrainerContext.swift` |
+| **Check-ins** | 1–4/day or custom times, quiet hours, weekdays, skip on shift days | `Services/CheckInScheduler.swift` |
+| **Shift-aware plan** | Mark 12h/24h shifts, clinicals, classes; sessions move to the best days | `Services/TrainingPlanner.swift` |
+| **Look** | Black-first with blue highlights; Settings → Appearance switches Dark / Light / System | `Views/Components/Theme.swift` |
 
-> The code was written without a Mac in the loop, so the first build may surface a few compiler
-> errors. They should be small (a type name or a modifier); fix them as Xcode points them out.
+Tabs: **Today · Train · Coach · Leaderboard · PRs**. The exercise library is under Train;
+Settings is the gear on Today.
 
-## What's in the MVP
+## Project setup notes
 
-| Brief feature | Where |
-| --- | --- |
-| 1. AI coach chat (streaming, your own key in Keychain, model picker) | `Views/Chat`, `Services/AnthropicClient.swift`, `Services/TrainerContext.swift` |
-| 2. Check-ins: 1–4/day presets, custom times, quiet hours, days on/off, skip on shift days | `Services/CheckInScheduler.swift`, `Views/Settings/CheckInSettingsView.swift` |
-| 3. Exercise library: 35 exercises, picture, muscles, equipment, steps, mistakes | `Data/ExerciseCatalog.swift`, `Views/Library` |
-| 4. Guided session, one-tap set logging, auto rest timer, edit/skip/extra sets, summary, saved to Health | `Views/Train/SessionView.swift`, `SetEntryPad.swift` |
-| 5. Per-exercise stats: best weight, Epley 1RM chart, volume chart, recent sessions, PRs, 1M/3M/6M/All | `Views/Library/ExerciseStatsView.swift` |
-| 6. Bodyweight (with 7-day average) and bench/squat/deadlift maxes, tested vs estimated, total | `Views/Progress/ProgressHubView.swift` |
-| 8. HealthKit: read steps, energy, sleep, HR, body mass, food macros; write workouts and body mass; each group asked separately | `Services/HealthKitManager.swift`, Settings → Apple Health |
-| Shift-aware week plan (sessions move around 12h/24h shifts, clinicals, classes) | `Services/TrainingPlanner.swift`, the week strip on Today/Train |
+- Xcode 16+ (CI uses the newest Xcode on GitHub's macOS runners). iOS 17+. iPhone only.
+- Folder-synced project: any file added under `MPCoaching/` is built automatically.
+- Bundle ID in the project is `com.example.mpcoaching`; the TestFlight workflow overrides it
+  with your `BUNDLE_ID` secret.
+- Leaderboards are off until a CloudKit container is set (`AppConfig.cloudKitContainerID`, or the
+  `CLOUDKIT_CONTAINER` secret for TestFlight builds). The schema is in `cloudkit/schema.ckdb`.
+- `project.yml` regenerates the project with XcodeGen if ever needed.
 
-Tabs: **Today · Train · Coach · Library · PRs**. Settings is the gear on Today. Stats open from any
-exercise (library, session history, PR page → "Stats for every exercise").
+## Decisions so far
 
-### How the pieces fit
+- Name: **MP Coaching**. Backend for social: **CloudKit** (no extra accounts, free tier, Apple ID
+  sign-in). Pictures: drawn in code, no licensing. Distribution: **TestFlight first**.
+- Business model: subscription later (StoreKit 2). Leaderboards and share cards are the growth hook.
 
-- **Storage:** SwiftData, on device only. Weights are stored in kg and shown in lbs or kg.
-- **PRs** come from logged sets each time they're shown, so editing or deleting a set never leaves
-  a stale record. Tested 1RMs are stored separately and always labelled "tested". The first
-  session of an exercise sets a baseline and isn't celebrated. After that, a beaten best shows a
-  banner and a haptic the moment you log the set.
-- **Set logging:** the weight and reps from the last set (or last time) are pre-filled, so most
-  sets take **one tap** on *Log set*. Paired exercises (supersets) alternate automatically.
-- **Check-ins:** local notifications fire at your times. The coach's message is written when you
-  open the Coach tab (Claude if a key is set, a built-in message otherwise), so no server is
-  needed. Notifications are scheduled 14 days ahead and refreshed every time the app opens.
-- **Coach:** calls `https://api.anthropic.com/v1/messages` with streaming. The key never leaves
-  the Keychain except in that request header. Default model `claude-sonnet-5-5` (changeable in
-  Settings). The persona sits in a cached system block; a fresh data snapshot (week plan, recent
-  sessions, maxes, bodyweight trend, Health summary numbers) follows it. Server-side refusal
-  fallback is turned on for models that support it.
-- **Pictures:** each exercise has an animated stick-figure drawing generated in code, so there's
-  no image licensing question. To use a real photo, add an image named `exercise-<id>` (e.g.
-  `exercise-deadlift`) to `Assets.xcassets` and it replaces the drawing.
+## Next ideas
 
-## Acceptance checklist (from the brief)
-
-- [x] Full Day 1 workout without leaving the session screen (picture opens as a sheet)
-- [x] One tap to log a set once weight/reps are set (pre-filled from last time)
-- [x] Stats page with a real chart after two logged sessions
-- [x] PR page: bodyweight, three maxes, total, new PR flagged on log
-- [x] No API key: logging, stats and PRs work, and the Coach tab explains how to add a key
-- [x] With a key, the coach answers using recent training and Health data
-- [x] Check-ins at chosen times; custom schedule accepts any times
-
-## Open questions for you
-
-1. **App name.** "Trainer" is a placeholder (display name + target name).
-2. **Friends/leaderboard backend:** CloudKit shared database, Firebase, or Supabase? CloudKit is
-   the simplest for an iPhone-only app (no extra accounts, Apple ID sign-in, free tier).
-3. **Exercise pictures:** the drawings avoid licensing. If you want photos, where from and under
-   what licence?
-4. **Distribution:** TestFlight first, or straight to the App Store?
-5. **Price:** free for personal use, one-time, or subscription?
-
-Still to do before an App Store release: an app icon (`Assets.xcassets/AppIcon`), and a privacy
-policy (needed because of HealthKit).
+- Subscription paywall (StoreKit 2) once the free version feels right.
+- Mesocycle planner: auto-ramping volume over 4–6 weeks, then a deload week.
+- Apple Watch set logging. Custom exercises and programs.
+- Weekly leaderboard challenges (most volume, most PRs, best streak) for the marketing hook.

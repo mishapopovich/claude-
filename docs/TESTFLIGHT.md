@@ -55,5 +55,3 @@ needs the record types created first:
 3. **Deploy Schema Changes…** to Production.
 
 Everything except leaderboards works without this.
-
----

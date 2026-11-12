@@ -1,96 +1,74 @@
-# Getting MP Coaching on your iPhone
+# Test MP Coaching on your iPhone (free)
 
-There are two ways. **TestFlight is the one to use**: it installs like a normal app, updates
-itself, lasts 90 days per build, lets you invite friends (up to 10,000 testers) so the
-leaderboards actually have people on them, and doesn't need a Mac.
+You need your iPhone, its cable, a computer, and your normal Apple ID. No paid account.
 
-| | TestFlight (recommended) | Xcode on a Mac, free Apple ID |
-| --- | --- | --- |
-| Cost | Apple Developer Program, $99/year (you need it for the App Store anyway) | Free |
-| Needs a Mac | No (GitHub builds it) | Yes |
-| Friends can install | Yes, by link | No |
-| Leaderboards (iCloud) | Yes | No (free accounts can't use iCloud) |
-| App expires | Each build after 90 days (just upload a new one) | After 7 days, reinstall from Xcode |
+Two limits Apple puts on free installs:
+- The app stops opening after **7 days**. Reinstall the same way and your data is still there
+  (don't delete the app first).
+- **Leaderboards are off** (they need iCloud, which free accounts can't use). Everything else works.
+
+Pick the section for your computer.
 
 ---
 
-## Option A: TestFlight, no Mac needed
+## If you have a Mac (easiest)
 
-### 1. Join the Apple Developer Program (one time)
-developer.apple.com/programs → Enroll. Takes from a few minutes to a couple of days to be approved.
+1. Install **Xcode** from the Mac App Store (free, large download).
+2. Download this project: on GitHub, switch to the branch `claude/personal-trainer-app-brief-ryffle`
+   → green **Code** button → **Download ZIP**, and unzip it.
+3. Double-click **MPCoaching.xcodeproj**.
+4. Xcode → **Settings → Accounts → +** → sign in with your Apple ID.
+5. In the left sidebar click **MPCoaching** (blue icon) → **Signing & Capabilities**:
+   - Team: pick your name **(Personal Team)**
+   - Bundle Identifier: change `com.example.mpcoaching` to something unique,
+     e.g. `com.yourname.mpcoaching`
+6. Plug in your iPhone, unlock it, tap **Trust**. Pick your iPhone at the top of Xcode, press **▶︎**.
+7. On the iPhone, if asked:
+   - **Settings → Privacy & Security → Developer Mode → On** (the phone restarts).
+   - **Settings → General → VPN & Device Management** → your Apple ID → **Trust**.
+8. Press ▶︎ again. The app opens.
 
-### 2. Register the app (one time, on the web)
-1. **developer.apple.com → Certificates, IDs & Profiles → Identifiers → +** → App IDs → App.
-   - Bundle ID: something like `com.yourname.mpcoaching`
-   - Capabilities: tick **HealthKit**, and **iCloud** (with CloudKit) if you want leaderboards.
-2. For leaderboards: **Identifiers → (dropdown) iCloud Containers → +** → `iCloud.com.yourname.mpcoaching`.
-   Then open your App ID again → iCloud → Configure → tick that container.
-3. **appstoreconnect.apple.com → Apps → + New App** → iOS, name "MP Coaching", pick the bundle ID
-   from step 1, any SKU (e.g. `mpcoaching`).
+Every 7 days: plug in and press ▶︎.
 
-### 3. Create an API key so GitHub can upload builds (one time)
-App Store Connect → **Users and Access → Integrations → App Store Connect API → +**
-- Name: GitHub, Access: **App Manager**
-- Download the `.p8` file (you can only download it once). Note the **Key ID** and the **Issuer ID**.
-
-### 4. Add the secrets to GitHub (one time)
-GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**:
-
-| Secret | Value |
-| --- | --- |
-| `APPLE_TEAM_ID` | Your Team ID (developer.apple.com → Account → Membership details) |
-| `BUNDLE_ID` | `com.yourname.mpcoaching` |
-| `ASC_KEY_ID` | Key ID from step 3 |
-| `ASC_ISSUER_ID` | Issuer ID from step 3 |
-| `ASC_KEY_P8_BASE64` | The .p8 file as base64. On a Mac: `base64 -i AuthKey_XXXX.p8 \| pbcopy`. On Windows PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("AuthKey_XXXX.p8"))` |
-| `CLOUDKIT_CONTAINER` | *(optional, leaderboards)* `iCloud.com.yourname.mpcoaching` |
-
-### 5. Build and upload
-GitHub → **Actions → TestFlight → Run workflow**. About 10–15 minutes. Apple then processes the
-build (5–30 minutes) and emails you.
-
-### 6. Install
-1. Install the **TestFlight** app from the App Store on your iPhone.
-2. App Store Connect → your app → **TestFlight** → Internal Testing → + → add yourself (your Apple ID email).
-3. Open the email/TestFlight → Install. Done.
-
-To let friends in: TestFlight → **External Testing** → create a group → add the build → enable the
-**public link** and send it. The first external build goes through a short Apple review (usually
-under a day).
-
-### 7. Leaderboards: one-time iCloud setup
-Leaderboards store data in CloudKit, and TestFlight builds use the **Production** database, which
-needs the record types created first:
-1. **icloud.developer.apple.com → CloudKit Console → your container → Schema.**
-2. Create the 4 record types from `cloudkit/schema.ckdb` (Lifter, Username, LBGroup, Membership)
-   with the listed fields, in the **Development** environment. Mark `Membership.groupCode` as
-   **Queryable** (Indexes). On a Mac you can instead run:
-   `xcrun cktool import-schema --team-id TEAMID --container-id iCloud.com.yourname.mpcoaching --environment development --file cloudkit/schema.ckdb`
-3. **Deploy Schema Changes…** to Production.
-
-Everything except leaderboards works without this.
+If Xcode shows an error about **HealthKit** on your free account: in Signing & Capabilities click
+the trash icon next to HealthKit and press ▶︎ again. The app works, just without Apple Health data.
 
 ---
 
-## Option B: Xcode on a Mac (free, quick test)
+## If you have a Windows PC (no Mac)
 
-1. Install Xcode from the Mac App Store. Open `MPCoaching.xcodeproj`.
-2. Xcode → Settings → Accounts → add your Apple ID.
-3. Select the **MPCoaching** target → Signing & Capabilities → Team: your name (Personal Team).
-   Change the Bundle Identifier to something unique, e.g. `com.yourname.mpcoaching`.
-4. Plug in your iPhone, pick it at the top, press ▶︎.
-5. On the iPhone: Settings → General → VPN & Device Management → trust your developer profile.
-   Also turn on Settings → Privacy & Security → **Developer Mode** when asked.
+1. **Get the app file.** On GitHub open the repo → **Actions** tab → **iPhone app file (for free
+   sideloading)** → the newest green run → scroll to **Artifacts** → download **MPCoaching-ipa**
+   and unzip it. You now have `MPCoaching.ipa`.
+2. **Install iTunes and iCloud from apple.com** (the versions from apple.com, not the Microsoft
+   Store), so Windows can talk to your iPhone.
+3. Install **Sideloadly** (sideloadly.io).
+4. Plug in your iPhone, unlock it, tap **Trust**.
+5. Open Sideloadly, drag in `MPCoaching.ipa`, type your Apple ID, click **Start**.
+   (It asks for your Apple ID password to sign the app. If you'd rather not use your main
+   Apple ID, make a second free one just for this.)
+6. On the iPhone:
+   - **Settings → Privacy & Security → Developer Mode → On** (the phone restarts).
+   - **Settings → General → VPN & Device Management** → your Apple ID → **Trust**.
+7. Open MP Coaching.
 
-Free accounts: the app stops opening after 7 days (press ▶︎ again to reinstall; your data stays),
-and iCloud leaderboards are not available. If Xcode refuses the HealthKit capability on a free
-account, remove it under Signing & Capabilities: the app still runs, just without Health data.
+Every 7 days: repeat step 5 (Sideloadly can also refresh automatically while your phone and PC
+are on the same Wi-Fi).
+
+If Apple Health won't connect with this method, that's a free-account limit on Health access;
+the rest of the app still works.
 
 ---
 
 ## What to try in the first week
 - Mark your shifts and clinicals for the week on the Today tab and see where sessions land.
 - Do Day 1 and Day 2, logging every set. Check the PR page and an exercise's stats page.
-- Connect Apple Health (Settings → Apple Health) so readiness uses your sleep and resting heart rate.
-- Add your Anthropic API key and ask the coach what to do today.
+- Settings → Apple Health → connect Sleep and Heart rate, so readiness uses them.
+- Add your Anthropic API key (Settings) and ask the coach what to do today.
 - Write down anything slow, confusing or missing. That list is the next round of work.
+
+---
+
+## Later: TestFlight (paid, $99/year)
+When you want friends on it and leaderboards on, the paid Apple Developer account plus the
+`TestFlight` GitHub workflow uploads builds for you. Steps are in `docs/TESTFLIGHT.md`.

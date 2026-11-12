@@ -309,8 +309,8 @@ struct NotConfiguredView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Image(systemName: "trophy.fill").font(.system(size: 44)).foregroundStyle(Theme.blue)
-                Text("Leaderboards are almost ready").font(.title2.bold())
-                Text("Friends and group leaderboards run on iCloud (CloudKit), which needs a paid Apple Developer account. This build was made without it.")
+                Text("Leaderboards are coming").font(.title2.bold())
+                Text("Friends and group leaderboards run on iCloud, which Apple only allows on a paid developer account. This free test build has them switched off. Everything else works.")
                     .foregroundStyle(.secondary)
                 Text("To turn it on (developer steps):").font(.headline)
                 VStack(alignment: .leading, spacing: 6) {

@@ -1,0 +1,58 @@
+name: iPhone app file (for free sideloading)
+
+# Builds MPCoaching.ipa for installing with a free Apple ID through Sideloadly or AltStore
+# (works from Windows or a Mac). No Apple Developer account or secrets needed.
+# Download it from the run's "Artifacts" section at the bottom of the run page.
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: device-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick the newest Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+
+      - name: Build for iPhone (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project MPCoaching.xcodeproj \
+            -scheme MPCoaching \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" build.log
+
+      - name: Package .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/MPCoaching.app Payload/
+          # Ad-hoc signature that carries the HealthKit entitlement; the sideloading tool
+          # re-signs with your Apple ID and keeps it.
+          codesign --force --sign - --entitlements MPCoaching.entitlements Payload/MPCoaching.app
+          zip -qry MPCoaching.ipa Payload
+          ls -lh MPCoaching.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MPCoaching-ipa
+          path: MPCoaching.ipa
+          retention-days: 30
+
+      - name: Show compiler errors
+        if: failure()
+        run: grep -E "error:" build.log | sort -u | head -50 || true

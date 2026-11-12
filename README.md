@@ -5,7 +5,7 @@ sleep, resting heart rate, food, body weight, your shift schedule), holds you ba
 over-fatigued, pushes you when you're recovered, and lets you compete with friends on
 leaderboards.
 
-**→ To install it on your iPhone, see [docs/INSTALL_ON_IPHONE.md](docs/INSTALL_ON_IPHONE.md).**
+**→ To test it on your iPhone for free, see [docs/INSTALL_ON_IPHONE.md](docs/INSTALL_ON_IPHONE.md).**
 
 Every push is compiled on a real Mac by GitHub Actions (`iOS build` workflow), so the code in this
 branch is known to build. The `TestFlight` workflow signs it and uploads it to App Store Connect.

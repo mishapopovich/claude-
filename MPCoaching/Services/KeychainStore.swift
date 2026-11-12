@@ -4,7 +4,7 @@ import Security
 /// Minimal Keychain wrapper for the Anthropic API key.
 /// The key never goes to UserDefaults, logs, or any server other than api.anthropic.com.
 enum KeychainStore {
-    private static let service = (Bundle.main.bundleIdentifier ?? "Trainer") + ".anthropic"
+    private static let service = (Bundle.main.bundleIdentifier ?? "MPCoaching") + ".anthropic"
     private static let account = "anthropic-api-key"
 
     static var apiKey: String? {

@@ -278,7 +278,7 @@ enum DataExport {
             "chat": chat.map { ["role": $0.roleRaw, "text": $0.text, "date": iso.string(from: $0.date), "checkIn": $0.isCheckIn] as [String: Any] },
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]) else { return nil }
-        let name = "trainer-export-\(Date.now.formatted(.iso8601.year().month().day())).json"
+        let name = "mp-coaching-export-\(Date.now.formatted(.iso8601.year().month().day())).json"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
         do {
             try data.write(to: url, options: .atomic)

@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		A1B2C3D4E5F6000000000101 /* Trainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Trainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1B2C3D4E5F6000000000102 /* Trainer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Trainer.entitlements; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000101 /* MPCoaching.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPCoaching.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D4E5F6000000000102 /* MPCoaching.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MPCoaching.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A1B2C3D4E5F6000000000201 /* Trainer */ = {
+		A1B2C3D4E5F6000000000201 /* MPCoaching */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Trainer;
+			path = MPCoaching;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -33,8 +33,8 @@
 		A1B2C3D4E5F6000000000401 = {
 			isa = PBXGroup;
 			children = (
-				A1B2C3D4E5F6000000000201 /* Trainer */,
-				A1B2C3D4E5F6000000000102 /* Trainer.entitlements */,
+				A1B2C3D4E5F6000000000201 /* MPCoaching */,
+				A1B2C3D4E5F6000000000102 /* MPCoaching.entitlements */,
 				A1B2C3D4E5F6000000000402 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -42,7 +42,7 @@
 		A1B2C3D4E5F6000000000402 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A1B2C3D4E5F6000000000101 /* Trainer.app */,
+				A1B2C3D4E5F6000000000101 /* MPCoaching.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -50,9 +50,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A1B2C3D4E5F6000000000501 /* Trainer */ = {
+		A1B2C3D4E5F6000000000501 /* MPCoaching */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A1B2C3D4E5F6000000000802 /* Build configuration list for PBXNativeTarget "Trainer" */;
+			buildConfigurationList = A1B2C3D4E5F6000000000802 /* Build configuration list for PBXNativeTarget "MPCoaching" */;
 			buildPhases = (
 				A1B2C3D4E5F6000000000601 /* Sources */,
 				A1B2C3D4E5F6000000000301 /* Frameworks */,
@@ -63,13 +63,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				A1B2C3D4E5F6000000000201 /* Trainer */,
+				A1B2C3D4E5F6000000000201 /* MPCoaching */,
 			);
-			name = Trainer;
+			name = MPCoaching;
 			packageProductDependencies = (
 			);
-			productName = Trainer;
-			productReference = A1B2C3D4E5F6000000000101 /* Trainer.app */;
+			productName = MPCoaching;
+			productReference = A1B2C3D4E5F6000000000101 /* MPCoaching.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -87,7 +87,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A1B2C3D4E5F6000000000801 /* Build configuration list for PBXProject "Trainer" */;
+			buildConfigurationList = A1B2C3D4E5F6000000000801 /* Build configuration list for PBXProject "MPCoaching" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -101,7 +101,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A1B2C3D4E5F6000000000501 /* Trainer */,
+				A1B2C3D4E5F6000000000501 /* MPCoaching */,
 			);
 		};
 /* End PBXProject section */
@@ -191,15 +191,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Trainer.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MPCoaching.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Trainer;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Trainer reads steps, active energy, sleep, heart rate, body weight, workouts and the calories and macros your food app saves, to show them on the Today screen and give your coach context. Nothing is uploaded except summary numbers in coach chats you send with your own API key.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Trainer saves your finished workouts and the body weights you log to Apple Health.";
+				INFOPLIST_KEY_CFBundleDisplayName = "MP Coaching";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "MP Coaching reads steps, active energy, sleep, heart rate, body weight, workouts and the calories and macros your food app saves, to show them on the Today screen and give your coach context. Nothing is uploaded except summary numbers in coach chats you send with your own API key.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MP Coaching saves your finished workouts and the body weights you log to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -209,7 +209,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.trainer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.mpcoaching;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -226,15 +226,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Trainer.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MPCoaching.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Trainer;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Trainer reads steps, active energy, sleep, heart rate, body weight, workouts and the calories and macros your food app saves, to show them on the Today screen and give your coach context. Nothing is uploaded except summary numbers in coach chats you send with your own API key.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Trainer saves your finished workouts and the body weights you log to Apple Health.";
+				INFOPLIST_KEY_CFBundleDisplayName = "MP Coaching";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "MP Coaching reads steps, active energy, sleep, heart rate, body weight, workouts and the calories and macros your food app saves, to show them on the Today screen and give your coach context. Nothing is uploaded except summary numbers in coach chats you send with your own API key.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MP Coaching saves your finished workouts and the body weights you log to Apple Health.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -244,7 +244,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.trainer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.mpcoaching;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -259,7 +259,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A1B2C3D4E5F6000000000801 /* Build configuration list for PBXProject "Trainer" */ = {
+		A1B2C3D4E5F6000000000801 /* Build configuration list for PBXProject "MPCoaching" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A1B2C3D4E5F6000000000901 /* Debug */,
@@ -268,7 +268,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A1B2C3D4E5F6000000000802 /* Build configuration list for PBXNativeTarget "Trainer" */ = {
+		A1B2C3D4E5F6000000000802 /* Build configuration list for PBXNativeTarget "MPCoaching" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A1B2C3D4E5F6000000000903 /* Debug */,

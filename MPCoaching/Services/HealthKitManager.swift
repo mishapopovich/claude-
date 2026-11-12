@@ -260,9 +260,9 @@ final class HealthKitManager {
         do {
             try await builder.beginCollection(at: start)
             try await builder.addMetadata([
-                HKMetadataKeyWorkoutBrandName: "Trainer",
-                "TrainerSessionTitle": title,
-                "TrainerTotalVolumeKg": totalVolumeKg,
+                HKMetadataKeyWorkoutBrandName: "MP Coaching",
+                "MPCoachingSessionTitle": title,
+                "MPCoachingTotalVolumeKg": totalVolumeKg,
             ])
             try await builder.endCollection(at: end)
             _ = try await builder.finishWorkout()

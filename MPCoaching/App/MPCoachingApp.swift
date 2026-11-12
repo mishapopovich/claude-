@@ -3,7 +3,7 @@ import SwiftData
 import UserNotifications
 
 @main
-struct TrainerApp: App {
+struct MPCoachingApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var router = AppRouter.shared
     @State private var health = HealthKitManager.shared

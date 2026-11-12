@@ -122,7 +122,7 @@ struct TodayView: View {
             let handled = UserDefaults.standard.bool(forKey: CheckInScheduler.handledKey(for: t, on: .now))
             HStack {
                 Image(systemName: handled ? "checkmark.circle.fill" : passed ? "bell.badge" : "clock")
-                    .foregroundStyle(handled ? .green : passed ? .orange : .secondary)
+                    .foregroundStyle(handled ? .green : passed ? Theme.blue : .secondary)
                 Text(t.label).monospacedDigit()
                 Text(t.slot.title).foregroundStyle(.secondary)
                 Spacer()

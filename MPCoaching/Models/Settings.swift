@@ -38,6 +38,10 @@ enum SettingsKey {
     static let sessionsPerWeek = "sessionsPerWeek"
     static let healthIncludeInChat = "healthIncludeInChat"
     static let hasOnboarded = "hasOnboarded"
+    static let appearance = "appearance"
+    static let goal = "goal"
+    static let goalRatePercent = "goalRatePercent"
+    static let leaderboardEnabled = "leaderboardEnabled"
     static let userName = "userName"
     static let userContext = "userContext"
 }
@@ -74,6 +78,16 @@ enum AppSettings {
         }
     }
 
+    static var goal: TrainingGoal {
+        TrainingGoal(rawValue: defaults.string(forKey: SettingsKey.goal) ?? "") ?? .buildMuscle
+    }
+
+    /// Target body-weight change per week as a percent of body weight (e.g. 0.25 for a lean gain).
+    static var goalRatePercent: Double {
+        let v = defaults.double(forKey: SettingsKey.goalRatePercent)
+        return v > 0 ? v : goal.defaultRatePercent
+    }
+
     static var includeHealthInChat: Bool {
         defaults.object(forKey: SettingsKey.healthIncludeInChat) as? Bool ?? true
     }
@@ -93,4 +107,37 @@ struct ClaudeModel: Identifiable, Hashable {
         ClaudeModel(id: "claude-haiku-5-5", name: "Claude Haiku 5.5", note: "Cheapest and quickest, shorter answers."),
         ClaudeModel(id: "claude-fable-5-2", name: "Claude Fable 5.2", note: "Most capable, most expensive."),
     ]
+}
+
+/// What the user is training for. Drives calorie and protein targets and how hard the coach pushes.
+enum TrainingGoal: String, CaseIterable, Identifiable {
+    case buildMuscle, loseFat, recomp, maintain
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .buildMuscle: "Build muscle"
+        case .loseFat: "Lose fat"
+        case .recomp: "Recomp (lose fat, keep building)"
+        case .maintain: "Maintain and get healthier"
+        }
+    }
+
+    /// Sign of the weekly weight change.
+    var direction: Double {
+        switch self {
+        case .buildMuscle: 1
+        case .loseFat: -1
+        case .recomp, .maintain: 0
+        }
+    }
+
+    var defaultRatePercent: Double {
+        switch self {
+        case .buildMuscle: 0.25
+        case .loseFat: 0.5
+        case .recomp, .maintain: 0
+        }
+    }
 }

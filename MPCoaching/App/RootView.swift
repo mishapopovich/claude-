@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.hasOnboarded) private var hasOnboarded = false
+    @AppStorage(SettingsKey.appearance) private var appearance: AppearanceMode = .dark
 
     var body: some View {
         @Bindable var router = router
@@ -27,15 +28,20 @@ struct RootView: View {
                 .tabItem { Label("PRs", systemImage: "trophy") }
                 .tag(AppTab.progress)
         }
+        .tint(Theme.blue)
+        .preferredColorScheme(appearance.colorScheme)
         .fullScreenCover(item: $router.activeSession) { session in
             SessionView(session: session)
+                .preferredColorScheme(appearance.colorScheme)
         }
         .sheet(isPresented: $router.showSettings) {
             SettingsView()
+                .preferredColorScheme(appearance.colorScheme)
         }
         .sheet(isPresented: Binding(get: { !hasOnboarded }, set: { if !$0 { hasOnboarded = true } })) {
             OnboardingView()
                 .interactiveDismissDisabled()
+                .preferredColorScheme(appearance.colorScheme)
         }
         .task {
             await refreshEverything()

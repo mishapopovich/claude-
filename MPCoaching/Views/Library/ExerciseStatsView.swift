@@ -117,9 +117,9 @@ struct ExerciseStatsView: View {
                     Chart(visible) { p in
                         LineMark(x: .value("Date", p.date), y: .value("Volume", unit.fromKg(p.volumeKg)))
                             .interpolationMethod(.monotone)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.blue.opacity(0.6))
                         PointMark(x: .value("Date", p.date), y: .value("Volume", unit.fromKg(p.volumeKg)))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.blue.opacity(0.6))
                             .symbolSize(30)
                     }
                     .frame(height: 160)
@@ -132,7 +132,7 @@ struct ExerciseStatsView: View {
                     ForEach(Array(timeline.reversed())) { e in
                         HStack {
                             Image(systemName: e.kind == .tested1RM ? "checkmark.seal.fill" : "trophy")
-                                .foregroundStyle(e.kind == .tested1RM ? .blue : .yellow)
+                                .foregroundStyle(e.kind == .tested1RM ? Theme.blue : Color.secondary)
                             VStack(alignment: .leading) {
                                 Text(e.kind.label).font(.subheadline.weight(.semibold))
                                 Text(e.date.formatted(date: .abbreviated, time: .omitted)).font(.caption).foregroundStyle(.secondary)

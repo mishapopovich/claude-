@@ -195,7 +195,7 @@ struct NoKeyBanner: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.12))
+        .background(Theme.blueFaint)
     }
 }
 

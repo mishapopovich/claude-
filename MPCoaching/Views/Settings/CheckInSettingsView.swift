@@ -32,7 +32,7 @@ struct CheckInSettingsView: View {
                 Toggle("Check-ins", isOn: $schedule.enabled)
                 if permissionDenied {
                     Text("Notifications are off for this app. Turn them on in iOS Settings → Notifications.")
-                        .font(.footnote).foregroundStyle(.orange)
+                        .font(.footnote).foregroundStyle(Theme.warn)
                 }
             } footer: {
                 Text("A reminder arrives at each time. When you open it, the coach writes a short check-in: sleep and today's plan in the morning, food and movement at midday, a wrap-up in the evening.")
@@ -59,7 +59,7 @@ struct CheckInSettingsView: View {
                                 Text(t.slot.title).foregroundStyle(.secondary)
                                 if schedule.isQuiet(t) {
                                     Spacer()
-                                    Text("quiet hours").font(.caption).foregroundStyle(.orange)
+                                    Text("quiet hours").font(.caption).foregroundStyle(Theme.warn)
                                 }
                             }
                         }

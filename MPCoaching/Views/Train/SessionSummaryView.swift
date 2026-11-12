@@ -26,7 +26,7 @@ struct SessionSummaryView: View {
                     Section("New personal records") {
                         ForEach(Array(records.enumerated()), id: \.offset) { _, r in
                             HStack {
-                                Image(systemName: "trophy.fill").foregroundStyle(.yellow)
+                                Image(systemName: "trophy.fill").foregroundStyle(Theme.blue)
                                 VStack(alignment: .leading) {
                                     Text(ExerciseCatalog.name(r.exerciseID)).font(.headline)
                                     Text(r.kind == .estimated1RM

@@ -250,18 +250,18 @@ struct SessionView: View {
                 .buttonStyle(.bordered)
             }
             .padding(12)
-            .background(RoundedRectangle(cornerRadius: 14).fill((left > 0 ? Color.blue : Color.green).opacity(0.15)))
+            .background(RoundedRectangle(cornerRadius: 14).fill((left > 0 ? Theme.blue : Theme.good).opacity(0.15)))
         }
     }
 
     private func prBanner(_ text: String) -> some View {
         HStack {
-            Image(systemName: "trophy.fill").foregroundStyle(.yellow)
+            Image(systemName: "trophy.fill").foregroundStyle(Theme.blue)
             Text(text).font(.subheadline.weight(.semibold))
             Spacer()
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.yellow.opacity(0.2)))
+        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.blue.opacity(0.22)))
         .transition(.scale.combined(with: .opacity))
     }
 

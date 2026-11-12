@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Movement families. Each one has an animated stick-figure drawing, so every exercise has a
+/// Movement families. Each one has an animated placard-style drawing, so every exercise has a
 /// picture without depending on licensed photos. Drop a real photo into the asset catalog named
 /// `exercise-<id>` and `ExercisePicture` shows that instead.
 enum MovementPattern {
@@ -322,12 +322,42 @@ extension MovementPattern {
     }
 }
 
+// MARK: - Muscle highlighting on the figure
+
+/// Body parts of the side-view figure that can light up.
+enum FigurePart: Hashable {
+    case neck, shoulder, chestBack, midsection, hip, thigh, shin, upperArm, forearm
+}
+
+enum MuscleMapping {
+    /// Which figure parts a muscle name lights up.
+    static func figureParts(_ muscle: String) -> Set<FigurePart> {
+        switch muscle.lowercased() {
+        case "quads", "hamstrings", "adductors": [.thigh]
+        case "glutes": [.hip]
+        case "calves": [.shin]
+        case "chest", "upper chest", "lats", "mid back", "upper back": [.chestBack]
+        case "abs", "core", "obliques", "lower back", "hip flexors": [.midsection]
+        case "front delts", "side delts", "rear delts", "shoulders", "rotator cuff": [.shoulder]
+        case "traps": [.neck]
+        case "biceps", "triceps", "brachialis": [.upperArm]
+        case "forearms", "grip": [.forearm]
+        default: []
+        }
+    }
+
+    static func figureParts(_ muscles: [String]) -> Set<FigurePart> {
+        muscles.reduce(into: Set<FigurePart>()) { $0.formUnion(figureParts($1)) }
+    }
+}
+
 // MARK: - Views
 
-/// Shows the bundled photo for an exercise if there is one, otherwise the animated drawing.
+/// Shows the bundled photo for an exercise if there is one, otherwise the placard-style drawing.
 struct ExercisePicture: View {
     let exercise: Exercise
     var animated: Bool = true
+    var showArrow: Bool = true
 
     var body: some View {
         Group {
@@ -336,16 +366,26 @@ struct ExercisePicture: View {
                     .resizable()
                     .scaledToFit()
             } else {
-                ExerciseIllustration(pattern: exercise.pattern, animated: animated)
+                ExerciseIllustration(
+                    pattern: exercise.pattern,
+                    primary: MuscleMapping.figureParts(exercise.primaryMuscles),
+                    secondary: MuscleMapping.figureParts(exercise.secondaryMuscles),
+                    animated: animated,
+                    showArrow: showArrow && animated)
             }
         }
-        .accessibilityLabel("Picture of \(exercise.name)")
+        .accessibilityLabel("Picture of \(exercise.name), works \(exercise.primaryMuscles.joined(separator: ", "))")
     }
 }
 
+/// Machine-placard style drawing: a solid neutral figure, the working muscles lit in blue,
+/// and a dashed arrow tracing the movement path.
 struct ExerciseIllustration: View {
     let pattern: MovementPattern
+    var primary: Set<FigurePart> = []
+    var secondary: Set<FigurePart> = []
     var animated: Bool = true
+    var showArrow: Bool = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -358,124 +398,373 @@ struct ExerciseIllustration: View {
                     let phase = (time.truncatingRemainder(dividingBy: anim.period)) / anim.period
                     // Smooth there-and-back: 0 → 1 → 0 over one period.
                     let t = (1 - cos(phase * 2 * .pi)) / 2
-                    figure(anim.start.interpolated(to: anim.end, t: t), props: anim.props)
+                    figure(anim.start.interpolated(to: anim.end, t: t), anim: anim)
                 }
             } else {
-                // Static thumbnail: show the hardest point of the movement.
-                figure(anim.start.interpolated(to: anim.end, t: 0.85), props: anim.props)
+                figure(anim.start.interpolated(to: anim.end, t: 0.85), anim: anim)
             }
         }
         .aspectRatio(1, contentMode: .fit)
     }
 
-    private func figure(_ pose: Pose, props: [Prop]) -> some View {
-        Canvas { ctx, size in
+    private func figure(_ pose: Pose, anim: MovementAnimation) -> some View {
+        let props = anim.props
+        let arrow = showArrow ? MotionPath(anim) : nil
+        let primary = self.primary
+        let secondary = self.secondary.subtracting(primary)
+        return Canvas { ctx, size in
             let s = min(size.width, size.height) / 100
             let ox = (size.width - 100 * s) / 2
             let oy = (size.height - 100 * s) / 2
             func pt(_ p: CGPoint) -> CGPoint { CGPoint(x: ox + p.x * s, y: oy + p.y * s) }
 
             let sk = Skeleton(pose)
-            let ink = GraphicsContext.Shading.color(.primary)
-            let faint = GraphicsContext.Shading.color(.primary.opacity(0.35))
-            let accent = GraphicsContext.Shading.color(.accentColor)
-            let equipment = GraphicsContext.Shading.color(.secondary)
-            let limb = StrokeStyle(lineWidth: 3.2 * s, lineCap: .round, lineJoin: .round)
+            let body = GraphicsContext.Shading.color(Theme.figure)
+            let bodyFar = GraphicsContext.Shading.color(Theme.figureFaint)
+            let hot = GraphicsContext.Shading.color(Theme.blue)
+            let warm = GraphicsContext.Shading.color(Theme.blue.opacity(0.45))
+            let equipment = GraphicsContext.Shading.color(Color(.systemGray2))
+            let plate = GraphicsContext.Shading.color(Color(.systemGray))
 
-            func line(_ pts: [CGPoint], _ shading: GraphicsContext.Shading, width: CGFloat? = nil) {
+            func capsule(_ pts: [CGPoint], _ shading: GraphicsContext.Shading, width: CGFloat) {
                 var path = Path()
                 path.addLines(pts.map(pt))
-                ctx.stroke(path, with: shading, style: width.map { StrokeStyle(lineWidth: $0 * s, lineCap: .round, lineJoin: .round) } ?? limb)
+                ctx.stroke(path, with: shading, style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
             }
             func rect(_ r: CGRect, _ shading: GraphicsContext.Shading) {
                 let path = Path(roundedRect: CGRect(x: ox + r.minX * s, y: oy + r.minY * s, width: r.width * s, height: r.height * s), cornerRadius: 1.2 * s)
                 ctx.fill(path, with: shading)
             }
-            func circle(_ c: CGPoint, r: CGFloat, _ shading: GraphicsContext.Shading, filled: Bool = true) {
+            func circle(_ c: CGPoint, r: CGFloat, _ shading: GraphicsContext.Shading, stroke: CGFloat? = nil) {
                 let p = pt(c)
                 let path = Path(ellipseIn: CGRect(x: p.x - r * s, y: p.y - r * s, width: 2 * r * s, height: 2 * r * s))
-                if filled { ctx.fill(path, with: shading) } else { ctx.stroke(path, with: shading, lineWidth: 2 * s) }
+                if let stroke { ctx.stroke(path, with: shading, lineWidth: stroke * s) } else { ctx.fill(path, with: shading) }
+            }
+            func lerp(_ a: CGPoint, _ b: CGPoint, _ t: CGFloat) -> CGPoint {
+                CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
+            }
+            func shade(_ part: FigurePart) -> GraphicsContext.Shading? {
+                if primary.contains(part) { return hot }
+                if secondary.contains(part) { return warm }
+                return nil
+            }
+            /// Draws a limb segment, then its muscle highlight on top (slightly thinner so the outline shows).
+            func limb(_ a: CGPoint, _ b: CGPoint, _ part: FigurePart, width: CGFloat, base: GraphicsContext.Shading, highlight: Bool = true) {
+                capsule([a, b], base, width: width)
+                if highlight, let h = shade(part) {
+                    capsule([lerp(a, b, 0.12), lerp(a, b, 0.88)], h, width: width * 0.62)
+                }
             }
 
             // Floor
-            line([CGPoint(x: 6, y: Skeleton.floorY + 2), CGPoint(x: 94, y: Skeleton.floorY + 2)], equipment, width: 1.2)
+            capsule([CGPoint(x: 6, y: Skeleton.floorY + 3), CGPoint(x: 94, y: Skeleton.floorY + 3)], equipment, width: 1.4)
 
             // Equipment behind the body
             for prop in props {
                 switch prop {
                 case .bench:
-                    let left = min(sk.hip.x, sk.shoulder.x) - 6
-                    let right = max(sk.hip.x, sk.shoulder.x) + 4
-                    let top = max(sk.hip.y, sk.shoulder.y) + 2.5
-                    rect(CGRect(x: left, y: top, width: right - left, height: 4), equipment)
-                    rect(CGRect(x: left + 3, y: top + 4, width: 2.5, height: Skeleton.floorY + 2 - top - 4), equipment)
-                    rect(CGRect(x: right - 5.5, y: top + 4, width: 2.5, height: Skeleton.floorY + 2 - top - 4), equipment)
+                    let left = min(sk.hip.x, sk.shoulder.x) - 7
+                    let right = max(sk.hip.x, sk.shoulder.x) + 5
+                    let top = max(sk.hip.y, sk.shoulder.y) + 4
+                    rect(CGRect(x: left, y: top, width: right - left, height: 4.5), equipment)
+                    rect(CGRect(x: left + 3, y: top + 4, width: 2.5, height: max(0, Skeleton.floorY + 3 - top - 4)), equipment)
+                    rect(CGRect(x: right - 5.5, y: top + 4, width: 2.5, height: max(0, Skeleton.floorY + 3 - top - 4)), equipment)
                 case .benchUnderShoulders:
-                    let top = sk.shoulder.y + 2.5
-                    rect(CGRect(x: sk.shoulder.x - 12, y: top, width: 14, height: Skeleton.floorY + 2 - top), equipment)
+                    let top = sk.shoulder.y + 4
+                    rect(CGRect(x: sk.shoulder.x - 13, y: top, width: 15, height: max(0, Skeleton.floorY + 3 - top)), equipment)
                 case .seat:
-                    let top = sk.hip.y + 2.5
-                    rect(CGRect(x: sk.hip.x - 9, y: top, width: 16, height: 3.5), equipment)
-                    rect(CGRect(x: sk.hip.x - 2.5, y: top + 3.5, width: 3, height: max(0, Skeleton.floorY + 2 - top - 3.5)), equipment)
+                    let top = sk.hip.y + 4
+                    rect(CGRect(x: sk.hip.x - 10, y: top, width: 18, height: 4), equipment)
+                    rect(CGRect(x: sk.hip.x - 2.5, y: top + 4, width: 3.5, height: max(0, Skeleton.floorY + 3 - top - 4)), equipment)
                 case .cableFromAbove:
-                    line([CGPoint(x: sk.handA.x + 2, y: 2), sk.handA], equipment, width: 1)
+                    capsule([CGPoint(x: sk.handA.x + 2, y: 2), sk.handA], equipment, width: 1)
+                    rect(CGRect(x: sk.handA.x - 4, y: 0, width: 12, height: 2.5), equipment)
                 case .cableFromFront:
-                    line([CGPoint(x: 97, y: sk.handA.y - 2), sk.handA], equipment, width: 1)
-                    rect(CGRect(x: 96, y: 4, width: 3, height: Skeleton.floorY - 2), equipment)
+                    rect(CGRect(x: 95, y: 4, width: 4, height: Skeleton.floorY - 1), equipment)
+                    capsule([CGPoint(x: 95, y: sk.handA.y - 2), sk.handA], equipment, width: 1)
                 case .bar(let p):
-                    line([CGPoint(x: p.x - 14, y: p.y), CGPoint(x: p.x + 14, y: p.y)], equipment, width: 2)
+                    capsule([CGPoint(x: p.x - 15, y: p.y), CGPoint(x: p.x + 15, y: p.y)], equipment, width: 2.4)
                 case .platformAtFeet:
-                    let c = CGPoint(x: (sk.ankleA.x + sk.toeA.x) / 2, y: (sk.ankleA.y + sk.toeA.y) / 2)
-                    line([CGPoint(x: c.x + 3.5, y: c.y - 9), CGPoint(x: c.x + 3.5 + 6, y: c.y + 9)], equipment, width: 2.5)
+                    let c = lerp(sk.ankleA, sk.toeA, 0.5)
+                    capsule([CGPoint(x: c.x + 4, y: c.y - 10), CGPoint(x: c.x + 10, y: c.y + 10)], equipment, width: 3)
                 default:
                     break
                 }
             }
 
-            // Far limbs (lighter), then torso, then near limbs.
-            line([sk.hip, sk.kneeB, sk.ankleB, sk.toeB], faint)
-            line([sk.shoulder, sk.elbowB, sk.handB], faint)
-            line([sk.hip, sk.shoulder], ink, width: 4)
-            circle(sk.head, r: Skeleton.headRadius, ink)
-            line([sk.hip, sk.kneeA, sk.ankleA, sk.toeA], ink)
-            line([sk.shoulder, sk.elbowA, sk.handA], ink)
+            // Far side of the body (muted), then torso, then near side.
+            capsule([sk.hip, sk.kneeB, sk.ankleB], bodyFar, width: 7)
+            capsule([sk.ankleB, sk.toeB], bodyFar, width: 4)
+            capsule([sk.shoulder, sk.elbowB, sk.handB], bodyFar, width: 5.5)
+
+            let mid = lerp(sk.hip, sk.shoulder, 0.5)
+            limb(sk.hip, sk.shoulder, .chestBack, width: 11, base: body, highlight: false)
+            if let h = shade(.midsection) { capsule([lerp(sk.hip, sk.shoulder, 0.15), mid], h, width: 7) }
+            if let h = shade(.chestBack) { capsule([mid, lerp(sk.hip, sk.shoulder, 0.88)], h, width: 7) }
+            capsule([sk.shoulder, sk.head], body, width: 4.5)
+            if let h = shade(.neck) { capsule([sk.shoulder, lerp(sk.shoulder, sk.head, 0.6)], h, width: 4) }
+            circle(sk.head, r: Skeleton.headRadius + 0.8, body)
+            if let h = shade(.hip) { circle(sk.hip, r: 4.6, h) }
+
+            limb(sk.hip, sk.kneeA, .thigh, width: 8, base: body)
+            limb(sk.kneeA, sk.ankleA, .shin, width: 6.5, base: body)
+            capsule([sk.ankleA, sk.toeA], body, width: 4.5)
+            limb(sk.shoulder, sk.elbowA, .upperArm, width: 6, base: body)
+            limb(sk.elbowA, sk.handA, .forearm, width: 5, base: body)
+            if let h = shade(.shoulder) { circle(sk.shoulder, r: 3.6, h) }
 
             // Equipment in front of the body
             for prop in props {
                 switch prop {
                 case .barbellAtHands:
-                    circle(sk.handA, r: 8, accent, filled: false)
-                    circle(sk.handA, r: 1.6, accent)
+                    circle(sk.handA, r: 8.5, plate)
+                    circle(sk.handA, r: 8.5, equipment, stroke: 1.2)
+                    circle(sk.handA, r: 1.8, equipment)
                 case .barbellAtHip:
-                    let c = CGPoint(x: sk.hip.x + 1, y: sk.hip.y - 5)
-                    circle(c, r: 8, accent, filled: false)
-                    circle(c, r: 1.6, accent)
+                    let c = CGPoint(x: sk.hip.x + 1, y: sk.hip.y - 6)
+                    circle(c, r: 8.5, plate)
+                    circle(c, r: 1.8, equipment)
                 case .dumbbells:
-                    rect(CGRect(x: sk.handA.x - 4, y: sk.handA.y - 2, width: 8, height: 4), accent)
+                    rect(CGRect(x: sk.handA.x - 5, y: sk.handA.y - 1.2, width: 10, height: 2.4), equipment)
+                    rect(CGRect(x: sk.handA.x - 6, y: sk.handA.y - 3.2, width: 3, height: 6.4), plate)
+                    rect(CGRect(x: sk.handA.x + 3, y: sk.handA.y - 3.2, width: 3, height: 6.4), plate)
                 case .kettlebellAtChest:
-                    circle(CGPoint(x: sk.handA.x + 2, y: sk.handA.y + 2), r: 3.6, accent)
+                    circle(CGPoint(x: sk.handA.x + 2, y: sk.handA.y + 2.5), r: 4, plate)
                 case .padAtShin:
-                    let c = CGPoint(x: sk.kneeA.x + (sk.ankleA.x - sk.kneeA.x) * 0.8, y: sk.kneeA.y + (sk.ankleA.y - sk.kneeA.y) * 0.8)
-                    circle(c, r: 2.6, accent)
+                    circle(lerp(sk.kneeA, sk.ankleA, 0.8), r: 3, equipment)
                 default:
                     break
+                }
+            }
+
+            // Movement path arrow
+            if let arrow {
+                var path = Path()
+                path.move(to: pt(arrow.from))
+                path.addQuadCurve(to: pt(arrow.to), control: pt(arrow.control))
+                ctx.stroke(path, with: hot, style: StrokeStyle(lineWidth: 1.4 * s, lineCap: .round, dash: [3 * s, 2.5 * s]))
+                for (tip, toward) in [(arrow.to, arrow.control), (arrow.from, arrow.control)] {
+                    let dx = tip.x - toward.x, dy = tip.y - toward.y
+                    let len = max(0.001, (dx * dx + dy * dy).squareRoot())
+                    let ux = dx / len, uy = dy / len
+                    var head = Path()
+                    head.move(to: pt(tip))
+                    head.addLine(to: pt(CGPoint(x: tip.x - ux * 4 - uy * 2.6, y: tip.y - uy * 4 + ux * 2.6)))
+                    head.addLine(to: pt(CGPoint(x: tip.x - ux * 4 + uy * 2.6, y: tip.y - uy * 4 - ux * 2.6)))
+                    head.closeSubpath()
+                    ctx.fill(head, with: hot)
                 }
             }
         }
     }
 }
 
+/// The path of the joint that moves the most between the two poses, bowed slightly outward.
+struct MotionPath {
+    let from: CGPoint
+    let to: CGPoint
+    let control: CGPoint
+
+    init?(_ anim: MovementAnimation) {
+        let a = Skeleton(anim.start), b = Skeleton(anim.end)
+        let pairs: [(CGPoint, CGPoint)] = [(a.handA, b.handA), (a.hip, b.hip), (a.shoulder, b.shoulder), (a.ankleA, b.ankleA), (a.kneeA, b.kneeA)]
+        func dist(_ p: (CGPoint, CGPoint)) -> CGFloat { hypot(p.1.x - p.0.x, p.1.y - p.0.y) }
+        guard let best = pairs.max(by: { dist($0) < dist($1) }), dist(best) > 6 else { return nil }
+        // Pull the ends in a little so the arrowheads don't sit on the joint, and offset sideways.
+        let dx = best.1.x - best.0.x, dy = best.1.y - best.0.y
+        let len = hypot(dx, dy)
+        let nx = -dy / len, ny = dx / len
+        let side: CGFloat = 7
+        from = CGPoint(x: best.0.x + dx * 0.08 + nx * side, y: best.0.y + dy * 0.08 + ny * side)
+        to = CGPoint(x: best.1.x - dx * 0.08 + nx * side, y: best.1.y - dy * 0.08 + ny * side)
+        control = CGPoint(x: (from.x + to.x) / 2 + nx * len * 0.18, y: (from.y + to.y) / 2 + ny * len * 0.18)
+    }
+}
+
+// MARK: - Muscle map (front and back)
+
+/// Regions on the front/back anatomy chart.
+enum MuscleRegion: Hashable {
+    case frontDelts, rearDelts, chest, biceps, forearms, abs, obliques, hipFlexors, quads, adductors
+    case traps, lats, midBack, lowerBack, triceps, glutes, hamstrings, calves
+
+    static func regions(for muscle: String) -> Set<MuscleRegion> {
+        switch muscle.lowercased() {
+        case "front delts": [.frontDelts]
+        case "side delts", "shoulders": [.frontDelts, .rearDelts]
+        case "rear delts", "rotator cuff": [.rearDelts]
+        case "chest", "upper chest": [.chest]
+        case "biceps", "brachialis": [.biceps]
+        case "forearms", "grip": [.forearms]
+        case "abs": [.abs]
+        case "core": [.abs, .obliques, .lowerBack]
+        case "obliques": [.obliques]
+        case "hip flexors": [.hipFlexors]
+        case "quads": [.quads]
+        case "adductors": [.adductors]
+        case "traps": [.traps]
+        case "upper back": [.traps, .midBack, .rearDelts]
+        case "lats": [.lats]
+        case "mid back": [.midBack]
+        case "lower back": [.lowerBack]
+        case "triceps": [.triceps]
+        case "glutes": [.glutes]
+        case "hamstrings": [.hamstrings]
+        case "calves": [.calves]
+        default: []
+        }
+    }
+
+    static func regions(for muscles: [String]) -> Set<MuscleRegion> {
+        muscles.reduce(into: Set<MuscleRegion>()) { $0.formUnion(regions(for: $1)) }
+    }
+}
+
+/// Front and back anatomy chart with primary muscles in blue and secondary muscles in light blue,
+/// like the diagram printed on gym machines.
+struct MuscleMapView: View {
+    let primary: [String]
+    let secondary: [String]
+    var showLegend = true
+
+    private struct Shape2D {
+        let region: MuscleRegion?
+        let rect: CGRect
+        var oval = false
+    }
+
+    // Coordinates in a 50 x 100 box per figure.
+    private static let front: [Shape2D] = [
+        Shape2D(region: .frontDelts, rect: CGRect(x: 7, y: 15, width: 9, height: 9), oval: true),
+        Shape2D(region: .frontDelts, rect: CGRect(x: 34, y: 15, width: 9, height: 9), oval: true),
+        Shape2D(region: .chest, rect: CGRect(x: 15, y: 17, width: 9.6, height: 11)),
+        Shape2D(region: .chest, rect: CGRect(x: 25.4, y: 17, width: 9.6, height: 11)),
+        Shape2D(region: .biceps, rect: CGRect(x: 6.5, y: 24.5, width: 6, height: 13), oval: true),
+        Shape2D(region: .biceps, rect: CGRect(x: 37.5, y: 24.5, width: 6, height: 13), oval: true),
+        Shape2D(region: .forearms, rect: CGRect(x: 5, y: 38.5, width: 5.5, height: 14), oval: true),
+        Shape2D(region: .forearms, rect: CGRect(x: 39.5, y: 38.5, width: 5.5, height: 14), oval: true),
+        Shape2D(region: .abs, rect: CGRect(x: 19.5, y: 29, width: 11, height: 18)),
+        Shape2D(region: .obliques, rect: CGRect(x: 15, y: 29.5, width: 4, height: 15)),
+        Shape2D(region: .obliques, rect: CGRect(x: 31, y: 29.5, width: 4, height: 15)),
+        Shape2D(region: .hipFlexors, rect: CGRect(x: 17, y: 47.5, width: 6.5, height: 5)),
+        Shape2D(region: .hipFlexors, rect: CGRect(x: 26.5, y: 47.5, width: 6.5, height: 5)),
+        Shape2D(region: .quads, rect: CGRect(x: 14.5, y: 53, width: 9, height: 24), oval: true),
+        Shape2D(region: .quads, rect: CGRect(x: 26.5, y: 53, width: 9, height: 24), oval: true),
+        Shape2D(region: .adductors, rect: CGRect(x: 22.5, y: 53, width: 5, height: 13), oval: true),
+        Shape2D(region: .calves, rect: CGRect(x: 15.5, y: 79, width: 7, height: 15), oval: true),
+        Shape2D(region: .calves, rect: CGRect(x: 27.5, y: 79, width: 7, height: 15), oval: true),
+    ]
+
+    private static let back: [Shape2D] = [
+        Shape2D(region: .traps, rect: CGRect(x: 17, y: 13, width: 16, height: 10)),
+        Shape2D(region: .rearDelts, rect: CGRect(x: 7, y: 15, width: 9, height: 9), oval: true),
+        Shape2D(region: .rearDelts, rect: CGRect(x: 34, y: 15, width: 9, height: 9), oval: true),
+        Shape2D(region: .lats, rect: CGRect(x: 14.5, y: 24, width: 7.5, height: 18)),
+        Shape2D(region: .lats, rect: CGRect(x: 28, y: 24, width: 7.5, height: 18)),
+        Shape2D(region: .midBack, rect: CGRect(x: 22, y: 23.5, width: 6, height: 15)),
+        Shape2D(region: .lowerBack, rect: CGRect(x: 19.5, y: 39, width: 11, height: 9)),
+        Shape2D(region: .triceps, rect: CGRect(x: 6.5, y: 24.5, width: 6, height: 13), oval: true),
+        Shape2D(region: .triceps, rect: CGRect(x: 37.5, y: 24.5, width: 6, height: 13), oval: true),
+        Shape2D(region: .forearms, rect: CGRect(x: 5, y: 38.5, width: 5.5, height: 14), oval: true),
+        Shape2D(region: .forearms, rect: CGRect(x: 39.5, y: 38.5, width: 5.5, height: 14), oval: true),
+        Shape2D(region: .glutes, rect: CGRect(x: 15, y: 48.5, width: 9.6, height: 11), oval: true),
+        Shape2D(region: .glutes, rect: CGRect(x: 25.4, y: 48.5, width: 9.6, height: 11), oval: true),
+        Shape2D(region: .hamstrings, rect: CGRect(x: 14.5, y: 60, width: 9, height: 18), oval: true),
+        Shape2D(region: .hamstrings, rect: CGRect(x: 26.5, y: 60, width: 9, height: 18), oval: true),
+        Shape2D(region: .calves, rect: CGRect(x: 15.5, y: 79, width: 7, height: 15), oval: true),
+        Shape2D(region: .calves, rect: CGRect(x: 27.5, y: 79, width: 7, height: 15), oval: true),
+    ]
+
+    var body: some View {
+        let hot = MuscleRegion.regions(for: primary)
+        let warm = MuscleRegion.regions(for: secondary).subtracting(hot)
+        VStack(spacing: 6) {
+            HStack(spacing: 10) {
+                chart(Self.front, label: "Front", hot: hot, warm: warm)
+                chart(Self.back, label: "Back", hot: hot, warm: warm)
+            }
+            if showLegend {
+                HStack(spacing: 12) {
+                    legend(Theme.blue, "Primary")
+                    legend(Theme.blue.opacity(0.45), "Secondary")
+                }
+                .font(.caption2)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Works \(primary.joined(separator: ", "))" + (secondary.isEmpty ? "" : ", also \(secondary.joined(separator: ", "))"))
+    }
+
+    private func legend(_ color: Color, _ text: String) -> some View {
+        HStack(spacing: 4) {
+            Circle().fill(color).frame(width: 8, height: 8)
+            Text(text).foregroundStyle(.secondary)
+        }
+    }
+
+    private func chart(_ shapes: [Shape2D], label: String, hot: Set<MuscleRegion>, warm: Set<MuscleRegion>) -> some View {
+        VStack(spacing: 2) {
+            Canvas { ctx, size in
+                let s = min(size.width / 50, size.height / 100)
+                let ox = (size.width - 50 * s) / 2
+                let oy = (size.height - 100 * s) / 2
+                func r(_ rect: CGRect) -> CGRect {
+                    CGRect(x: ox + rect.minX * s, y: oy + rect.minY * s, width: rect.width * s, height: rect.height * s)
+                }
+                let base = GraphicsContext.Shading.color(Theme.figureFaint)
+                // Head, neck, hands, feet, pelvis: the silhouette pieces that never light up.
+                ctx.fill(Path(ellipseIn: r(CGRect(x: 20, y: 1, width: 10, height: 11))), with: base)
+                ctx.fill(Path(roundedRect: r(CGRect(x: 22.5, y: 10, width: 5, height: 5)), cornerRadius: 1 * s), with: base)
+                ctx.fill(Path(ellipseIn: r(CGRect(x: 4.5, y: 52, width: 5, height: 6))), with: base)
+                ctx.fill(Path(ellipseIn: r(CGRect(x: 40.5, y: 52, width: 5, height: 6))), with: base)
+                ctx.fill(Path(roundedRect: r(CGRect(x: 15, y: 93.5, width: 8, height: 4)), cornerRadius: 2 * s), with: base)
+                ctx.fill(Path(roundedRect: r(CGRect(x: 27, y: 93.5, width: 8, height: 4)), cornerRadius: 2 * s), with: base)
+                for shape in shapes {
+                    let color: Color
+                    if let region = shape.region, hot.contains(region) {
+                        color = Theme.blue
+                    } else if let region = shape.region, warm.contains(region) {
+                        color = Theme.blue.opacity(0.45)
+                    } else {
+                        color = Theme.figureFaint
+                    }
+                    let rect = r(shape.rect)
+                    let path = shape.oval ? Path(ellipseIn: rect) : Path(roundedRect: rect, cornerRadius: 2.2 * s)
+                    ctx.fill(path, with: .color(color))
+                }
+            }
+            Text(label).font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// The full "machine placard": animated movement on the left, muscle chart on the right.
+struct ExercisePlacard: View {
+    let exercise: Exercise
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            ExercisePicture(exercise: exercise)
+                .frame(maxWidth: .infinity)
+            MuscleMapView(primary: exercise.primaryMuscles, secondary: exercise.secondaryMuscles)
+                .frame(width: 120, height: 170)
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 18).fill(Color(.secondarySystemGroupedBackground)))
+    }
+}
+
 #Preview {
     ScrollView {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
+        VStack(spacing: 16) {
             ForEach(ExerciseCatalog.all) { ex in
-                VStack {
-                    ExercisePicture(exercise: ex)
-                        .frame(height: 100)
-                    Text(ex.name).font(.caption2)
+                VStack(alignment: .leading) {
+                    Text(ex.name).font(.headline)
+                    ExercisePlacard(exercise: ex).frame(height: 200)
                 }
             }
         }
         .padding()
     }
+    .preferredColorScheme(.dark)
 }

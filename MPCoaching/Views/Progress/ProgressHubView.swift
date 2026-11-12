@@ -46,7 +46,7 @@ struct ProgressHubView: View {
                             LiftRow(lift: lift, max: maxes[lift] ?? nil, unit: unit)
                         }
                         .swipeActions {
-                            Button("Tested max") { testedFor = lift }.tint(.blue)
+                            Button("Tested max") { testedFor = lift }.tint(Theme.blue)
                         }
                     }
                     Menu {
@@ -107,7 +107,7 @@ struct LiftRow: View {
                     Text(unit.format(kg: max.valueKg)).font(.title3.bold()).monospacedDigit()
                     Text(max.kind == .tested1RM ? "tested" : "est. 1RM")
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(max.kind == .tested1RM ? .blue : .orange)
+                        .foregroundStyle(max.kind == .tested1RM ? Theme.blue : Color.secondary)
                 }
             }
         }

@@ -7,6 +7,8 @@ struct MPCoachingApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var router = AppRouter.shared
     @State private var health = HealthKitManager.shared
+    @State private var coach = CoachStore.shared
+    @State private var social = SocialStore.shared
 
     static let container: ModelContainer = {
         do {
@@ -21,13 +23,15 @@ struct MPCoachingApp: App {
             RootView()
                 .environment(router)
                 .environment(health)
+                .environment(coach)
+                .environment(social)
         }
         .modelContainer(Self.container)
     }
 }
 
 enum AppTab: Hashable {
-    case today, train, chat, library, progress
+    case today, train, chat, leaderboard, progress
 }
 
 /// App-wide navigation state, also driven by notification taps.

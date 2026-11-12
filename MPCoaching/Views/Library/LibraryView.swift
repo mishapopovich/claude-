@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct LibraryView: View {
+    /// True when pushed inside another NavigationStack (e.g. from the Train tab).
+    var embedded = false
     @State private var query = ""
     @State private var category: ExerciseCategory?
 
@@ -21,7 +23,14 @@ struct LibraryView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        if embedded {
+            content
+        } else {
+            NavigationStack { content }
+        }
+    }
+
+    private var content: some View {
             List {
                 Section {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -55,7 +64,6 @@ struct LibraryView: View {
             }
             .searchable(text: $query, prompt: "Exercise, muscle or equipment")
             .navigationTitle("Library")
-        }
     }
 
     private func chip(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
@@ -99,10 +107,10 @@ struct ExerciseDetailView: View {
         let best = PRService.currentMax(sets: sets, tested: PRService.testedMaxes(for: exercise.id, in: context))
         List {
             Section {
-                ExercisePicture(exercise: exercise)
-                    .frame(maxWidth: .infinity)
+                ExercisePlacard(exercise: exercise)
                     .frame(height: 220)
-                    .listRowBackground(Color(.secondarySystemBackground))
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
 
             Section {

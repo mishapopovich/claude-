@@ -5,6 +5,7 @@ struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppRouter.self) private var router
     @Environment(HealthKitManager.self) private var health
+    @Environment(CoachStore.self) private var coach
     @Query(sort: \WorkoutSession.startedAt, order: .reverse) private var sessions: [WorkoutSession]
     @Query private var dayPlans: [DayPlan]
     @AppStorage(SettingsKey.unit) private var unit: WeightUnit = .lbs
@@ -17,8 +18,21 @@ struct TodayView: View {
         NavigationStack {
             List {
                 Section {
+                    NavigationLink {
+                        CoachInsightsView()
+                    } label: {
+                        ReadinessCard(readiness: coach.report.readiness)
+                    }
+                    if let advice = coach.report.nutrition.advice, coach.report.nutrition.bodyWeightKg != nil {
+                        Label(advice, systemImage: "fork.knife").font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+
+                Section {
                     todayCard(today)
                 }
+
+                LeaderboardNudgeSection()
 
                 Section("Today's day") {
                     Picker("What's on today", selection: Binding(
@@ -55,7 +69,10 @@ struct TodayView: View {
                         .accessibilityLabel("Settings")
                 }
             }
-            .refreshable { await health.refreshToday() }
+            .refreshable {
+                await health.refreshToday()
+                await coach.refresh(context: context)
+            }
         }
     }
 
@@ -139,7 +156,9 @@ struct TodayView: View {
         let h = health.today
         return LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             metric("Food", h.dietaryKcal.map { "\(Int($0)) kcal" }, "fork.knife")
-            metric("Protein", h.proteinG.map { "\(Int($0)) g" }, "bolt.heart")
+            metric("Protein", h.proteinG.map { p in
+                coach.report.nutrition.proteinLowG.map { "\(Int(p)) / \(Int($0)) g" } ?? "\(Int(p)) g"
+            }, "bolt.heart")
             metric("Steps", h.steps.map { $0.formatted(.number.precision(.fractionLength(0))) }, "figure.walk")
             metric("Sleep", h.sleepHoursLastNight.map { String(format: "%.1f h", $0) }, "bed.double")
             metric("Carbs / fat", (h.carbsG != nil || h.fatG != nil) ? "\(Int(h.carbsG ?? 0)) / \(Int(h.fatG ?? 0)) g" : nil, "chart.pie")

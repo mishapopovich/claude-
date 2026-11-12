@@ -8,9 +8,11 @@ import HealthKit
 @MainActor
 enum TrainerContext {
     static let persona = """
-    You are the user's personal strength coach inside their training app. You speak like an \
-    evidence-based coach in the style of Dr. Mike Israetel: direct, practical, a bit of dry humor, \
-    built on progressive overload, sensible volume, recovery, and consistency over perfection.
+    You are the user's personal strength coach inside MP Coaching. You are a science-based \
+    lifting and nutrition coach: direct, practical, a bit of dry humor, built on progressive \
+    overload, weekly volume landmarks, fatigue management and deloads, high protein, and \
+    consistency over perfection. You have your own voice; never claim to be or imitate any real \
+    person.
 
     How you coach:
     - Use the data snapshot below. Refer to actual numbers (weights, reps, dates, sleep, steps, food) \
@@ -34,6 +36,12 @@ enum TrainerContext {
     or anything that sounds medical, say plainly that it is worth raising with a clinician, and keep \
     training advice conservative.
     - No extreme diets, dehydration, or drug advice.
+
+    Fatigue and pushing: the snapshot includes a readiness score and the factors behind it. When \
+    readiness is low or a deload is suggested, protect recovery (fewer sets, leave reps in reserve, \
+    lighter week). When readiness is high, push: aim for rep or weight PRs, and mention where the \
+    user stands against friends on their leaderboard if that data is present. Explain the why in \
+    one line.
 
     Check-ins: when a message says it is a scheduled check-in, write a short, friendly check-in \
     (2–4 sentences) that fits the time of day — morning: sleep and today's plan; midday: food and \
@@ -114,6 +122,22 @@ enum TrainerContext {
         } else {
             lines.append("- none logged")
         }
+
+        // Coach engine (same numbers the app shows)
+        let report = CoachStore.shared.report
+        lines.append("")
+        lines.append("READINESS (app's rules-based score, 0–100): \(report.readiness.score) — \(report.readiness.level.title)")
+        for f in report.readiness.factors { lines.append("- \(f.text) (\(f.impact >= 0 ? "+" : "")\(f.impact))") }
+        if report.readiness.deloadSuggested { lines.append("- Deload suggested (many hard weeks in a row or lifts dropping)") }
+        lines.append("Training load: last 7 days \(unit.format(kg: report.load.acuteKg)), usual week \(unit.format(kg: report.load.chronicWeeklyKg)), hard weeks in a row \(report.load.hardWeeksInARow)")
+        let vol = report.volume.filter { $0.sets > 0 }.map { "\($0.group.rawValue) \(String(format: "%.1f", $0.sets))" }
+        lines.append("Weekly hard sets per muscle: " + (vol.isEmpty ? "none this week" : vol.joined(separator: ", ")))
+        lines.append("Goal: \(AppSettings.goal.label), target \(String(format: "%.2f", AppSettings.goal.direction * AppSettings.goalRatePercent))% body weight per week")
+        let n = report.nutrition
+        if let low = n.proteinLowG, let high = n.proteinHighG { lines.append("Protein target: \(Int(low))–\(Int(high)) g/day") }
+        if let m = n.maintenanceKcal { lines.append("Maintenance: \(Int(m)) kcal (\(n.maintenanceMeasured ? "measured from intake + weight trend" : "rough estimate"))") }
+        if let t = n.targetKcal { lines.append("Calorie target: \(Int(t)) kcal/day") }
+        if let w = n.weeklyChangePercent { lines.append("Weight trend: \(String(format: "%+.2f", w))% per week") }
 
         // Health
         lines.append("")

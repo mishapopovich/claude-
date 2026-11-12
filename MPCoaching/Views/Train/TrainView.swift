@@ -14,6 +14,10 @@ enum WorkoutStarter {
             templateID: template?.id,
             templateName: template.map { "\($0.name) · \($0.focus)" } ?? "Free session",
             exerciseOrder: template?.exercises.map(\.exerciseID) ?? [])
+        // Adjust the plan to today's readiness (the user can switch back to the full plan).
+        let readiness = CoachStore.shared.report.readiness
+        session.readinessAtStart = readiness.score
+        session.setAdjustment = readiness.level.setAdjustment
         context.insert(session)
         try? context.save()
         router.activeSession = session
@@ -63,6 +67,14 @@ struct TrainView: View {
                     Text("This week")
                 } footer: {
                     Text("Tap a day to mark shifts, clinicals or classes. Sessions move to the best free days, with a rest day between when possible.")
+                }
+
+                Section {
+                    NavigationLink {
+                        LibraryView(embedded: true)
+                    } label: {
+                        Label("Exercise library", systemImage: "books.vertical")
+                    }
                 }
 
                 Section(DefaultProgram.current.name) {

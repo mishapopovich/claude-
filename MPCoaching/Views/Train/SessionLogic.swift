@@ -13,7 +13,8 @@ struct SessionLogic {
 
     /// Planned number of sets; added exercises default to 3 (or however many were logged).
     func plannedSetCount(_ exerciseID: String) -> Int {
-        planned(exerciseID)?.sets ?? 3
+        guard let plan = planned(exerciseID) else { return 3 }
+        return max(1, plan.sets + session.setAdjustment)
     }
 
     func logged(_ exerciseID: String) -> [ExerciseSet] { session.sets(for: exerciseID) }

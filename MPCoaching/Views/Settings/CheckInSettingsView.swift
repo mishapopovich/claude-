@@ -142,6 +142,7 @@ struct OnboardingView: View {
     @AppStorage(SettingsKey.unit) private var unit: WeightUnit = .lbs
     @AppStorage(SettingsKey.userName) private var userName = ""
     @AppStorage(SettingsKey.userContext) private var userContext = ""
+    @AppStorage(SettingsKey.goal) private var goal: TrainingGoal = .buildMuscle
     @State private var checkInsPerDay = 2
 
     var body: some View {
@@ -152,8 +153,8 @@ struct OnboardingView: View {
                         Image(systemName: "figure.strengthtraining.traditional")
                             .font(.system(size: 44))
                             .foregroundStyle(Color.accentColor)
-                        Text("Your pocket trainer").font(.title.bold())
-                        Text("A two-day full-body program, fast set logging, PRs, and a coach that checks in around your schedule.")
+                        Text("MP Coaching").font(.title.bold())
+                        Text("A science-based coach in your pocket: fast set logging, PRs, a readiness score that stops you overdoing it, and leaderboards that push you to do more.")
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 8)
@@ -165,6 +166,9 @@ struct OnboardingView: View {
                         ForEach(WeightUnit.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                    Picker("Goal", selection: $goal) {
+                        ForEach(TrainingGoal.allCases) { Text($0.label).tag($0) }
+                    }
                     TextField("Your week, goals, anything the coach should know", text: $userContext, axis: .vertical)
                         .lineLimit(3...6)
                 }

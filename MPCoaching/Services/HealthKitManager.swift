@@ -165,6 +165,28 @@ final class HealthKitManager {
         }
     }
 
+    /// Daily averages (e.g. resting heart rate) for the last `days` days, oldest first.
+    func dailyAverages(_ id: HKQuantityTypeIdentifier, unit: HKUnit, days: Int) async -> [(Date, Double)] {
+        guard isAvailable else { return [] }
+        let cal = Calendar.current
+        let end = cal.startOfDay(for: .now).addingTimeInterval(86_400)
+        guard let start = cal.date(byAdding: .day, value: -days, to: end) else { return [] }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        return await withCheckedContinuation { cont in
+            let query = HKStatisticsCollectionQuery(
+                quantityType: HKQuantityType(id), quantitySamplePredicate: predicate,
+                options: .discreteAverage, anchorDate: start, intervalComponents: DateComponents(day: 1))
+            query.initialResultsHandler = { _, collection, _ in
+                var out: [(Date, Double)] = []
+                collection?.enumerateStatistics(from: start, to: end) { stats, _ in
+                    if let q = stats.averageQuantity() { out.append((stats.startDate, q.doubleValue(for: unit))) }
+                }
+                cont.resume(returning: out)
+            }
+            store.execute(query)
+        }
+    }
+
     /// Body-mass samples since a date, for importing into the weight log.
     func bodyMassSamples(since: Date) async -> [(uuid: String, date: Date, kg: Double)] {
         guard isAvailable else { return [] }

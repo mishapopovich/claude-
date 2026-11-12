@@ -11,6 +11,9 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.healthIncludeInChat) private var includeHealthInChat = true
     @AppStorage(SettingsKey.userName) private var userName = ""
     @AppStorage(SettingsKey.userContext) private var userContext = ""
+    @AppStorage(SettingsKey.appearance) private var appearance: AppearanceMode = .dark
+    @AppStorage(SettingsKey.goal) private var goal: TrainingGoal = .buildMuscle
+    @AppStorage(SettingsKey.goalRatePercent) private var goalRate: Double = 0
 
     @State private var keyDraft = ""
     @State private var hasKey = KeychainStore.hasAPIKey
@@ -52,6 +55,31 @@ struct SettingsView: View {
                 } footer: {
                     Text("Shared with the coach so its advice fits your life.")
                 }
+
+                Section("Appearance") {
+                    Picker("Theme", selection: $appearance) {
+                        ForEach(AppearanceMode.allCases) { Text($0.label).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Section {
+                    Picker("Goal", selection: $goal) {
+                        ForEach(TrainingGoal.allCases) { Text($0.label).tag($0) }
+                    }
+                    if goal.direction != 0 {
+                        Stepper(value: Binding(get: { goalRate > 0 ? goalRate : goal.defaultRatePercent }, set: { goalRate = $0 }),
+                                in: 0.1...1.0, step: 0.05) {
+                            Text(String(format: "%@ %.2f%% of body weight / week", goal == .buildMuscle ? "Gain" : "Lose",
+                                        goalRate > 0 ? goalRate : goal.defaultRatePercent))
+                        }
+                    }
+                } header: {
+                    Text("Goal")
+                } footer: {
+                    Text("Sets your calorie and protein targets. Lean gaining is about 0.25%/week; muscle-friendly fat loss about 0.5–0.75%/week.")
+                }
+                .onChange(of: goal) { _, _ in goalRate = 0 }
 
                 Section("Training") {
                     Picker("Units", selection: $unit) {

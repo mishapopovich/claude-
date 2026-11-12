@@ -21,11 +21,11 @@ struct RootView: View {
             ChatView()
                 .tabItem { Label("Coach", systemImage: "bubble.left.and.bubble.right") }
                 .tag(AppTab.chat)
-            LibraryView()
-                .tabItem { Label("Library", systemImage: "books.vertical") }
-                .tag(AppTab.library)
+            LeaderboardView()
+                .tabItem { Label("Leaderboard", systemImage: "trophy") }
+                .tag(AppTab.leaderboard)
             ProgressHubView()
-                .tabItem { Label("PRs", systemImage: "trophy") }
+                .tabItem { Label("PRs", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(AppTab.progress)
         }
         .tint(Theme.blue)
@@ -57,6 +57,10 @@ struct RootView: View {
         await health.refreshToday()
         await BodyWeightSync.importFromHealth(context: context)
         await CheckInSync.reschedule(context: context)
+        await CoachStore.shared.refresh(context: context)
+        let social = SocialStore.shared
+        if social.status == .checking { await social.start() }
+        await social.publish(context: context)
     }
 }
 

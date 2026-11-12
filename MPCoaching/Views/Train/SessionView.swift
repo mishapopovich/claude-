@@ -35,6 +35,7 @@ struct SessionView: View {
                 Divider()
                 ScrollView {
                     VStack(spacing: 12) {
+                        readinessBanner
                         header
                         setChips
                         if let restEndsAt { restBanner(until: restEndsAt) }
@@ -177,6 +178,39 @@ struct SessionView: View {
             }
         } else {
             ContentUnavailableView("Add an exercise", systemImage: "plus.circle", description: Text("Tap Add above to pick from the library."))
+        }
+    }
+
+    // MARK: - Readiness
+
+    @ViewBuilder
+    private var readinessBanner: some View {
+        if let score = session.readinessAtStart, session.templateID != nil {
+            let level = Readiness(score: score, factors: []).level
+            if level != .normal || session.setAdjustment != 0 {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: level.symbol).foregroundStyle(Theme.blue)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Readiness \(score) · \(level.title)").font(.subheadline.weight(.semibold))
+                        Text(session.setAdjustment < 0
+                             ? "Plan trimmed by \(-session.setAdjustment) set\(session.setAdjustment == -1 ? "" : "s") per exercise. \(level.advice)"
+                             : level.advice)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                    if session.setAdjustment != 0 {
+                        Button("Full plan") {
+                            session.setAdjustment = 0
+                            try? context.save()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+                .padding(12)
+                .background(RoundedRectangle(cornerRadius: 14).fill(Theme.blueFaint))
+            }
         }
     }
 
@@ -423,6 +457,10 @@ struct SessionView: View {
             if ok { s.savedToHealth = true; try? context.save() }
         }
         showSummary = true
+        Task {
+            await CoachStore.shared.refresh(context: context)
+            await SocialStore.shared.publish(context: context)
+        }
     }
 
     private func discard() {

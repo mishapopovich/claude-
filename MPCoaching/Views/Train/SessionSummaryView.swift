@@ -7,6 +7,7 @@ struct SessionSummaryView: View {
 
     @Environment(\.modelContext) private var context
     @AppStorage(SettingsKey.unit) private var unit: WeightUnit = .lbs
+    @AppStorage(SettingsKey.userName) private var userName = ""
 
     var body: some View {
         let logic = SessionLogic(session: session, context: context)
@@ -34,6 +35,18 @@ struct SessionSummaryView: View {
                                          : "Heaviest set: \(unit.format(kg: r.set.weightKg))")
                                         .font(.subheadline)
                                 }
+                                Spacer()
+                                ShareLink(item: PRCardRenderer.render(
+                                    title: "New PR · \(ExerciseCatalog.name(r.exerciseID))",
+                                    value: r.kind == .estimated1RM ? unit.format(kg: r.set.estimatedOneRepMaxKg) : unit.format(kg: r.set.weightKg),
+                                    detail: r.kind == .estimated1RM
+                                        ? "Est. 1RM from \(unit.format(kg: r.set.weightKg, withUnit: false)) × \(r.set.reps)"
+                                        : "Heaviest set: \(unit.format(kg: r.set.weightKg, withUnit: false)) × \(r.set.reps)",
+                                    name: userName.isEmpty ? "MP Coaching" : userName),
+                                          preview: SharePreview("New PR", image: Image(systemName: "trophy"))) {
+                                    Image(systemName: "square.and.arrow.up")
+                                }
+                                .buttonStyle(.borderless)
                             }
                         }
                     }

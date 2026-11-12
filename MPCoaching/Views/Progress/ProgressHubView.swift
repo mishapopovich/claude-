@@ -354,6 +354,7 @@ struct TestedMaxSheet: View {
                         if let previous, kg > previous.valueKg + 0.01 {
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }
+                        Task { await SocialStore.shared.publish(context: context) }
                         dismiss()
                     }
                     .disabled(value <= 0)

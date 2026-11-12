@@ -17,6 +17,10 @@ final class WorkoutSession {
     /// Exercise IDs in the order the user worked through them (planned + any added).
     var exerciseOrder: [String] = []
     var savedToHealth: Bool = false
+    /// Sets added to / removed from each planned exercise because of readiness (0 = full plan).
+    var setAdjustment: Int = 0
+    /// Readiness score when the session started, for the history and the coach.
+    var readinessAtStart: Int?
 
     @Relationship(deleteRule: .cascade, inverse: \ExerciseSet.session)
     var sets: [ExerciseSet] = []
